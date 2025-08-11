@@ -24,11 +24,8 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.deepPurple,
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
-        cardTheme: CardTheme(
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -41,11 +38,8 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.deepPurple,
           brightness: Brightness.dark,
         ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
-        cardTheme: CardTheme(
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -175,8 +169,7 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
   }
 
   Future<void> _loadRecentPlaylists() async {
-    final prefs = await SharedPreferences.getInstance();
-    final recent = prefs.getStringList('recent_playlists') ?? [];
+    await SharedPreferences.getInstance();
     // Bu listeyi UI'da gösterebiliriz
   }
 
@@ -215,7 +208,10 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
       _showSnackBar("${videos.length} şarkı yüklendi!", isError: false);
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar("Playlist yüklenirken hata: ${e.toString()}", isError: true);
+      _showSnackBar(
+        "Playlist yüklenirken hata: ${e.toString()}",
+        isError: true,
+      );
     }
   }
 
@@ -278,7 +274,10 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
         await fileSink.close();
       }
 
-      _showSnackBar('${selectedList.length} şarkı başarıyla indirildi!', isError: false);
+      _showSnackBar(
+        '${selectedList.length} şarkı başarıyla indirildi!',
+        isError: false,
+      );
     } catch (e) {
       _showSnackBar('İndirme hatası: ${e.toString()}', isError: true);
     } finally {
@@ -303,7 +302,9 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
   List<Video> get _filteredVideos {
     if (_searchQuery.isEmpty) return _videos;
     return _videos
-        .where((v) => v.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .where(
+          (v) => v.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
         .toList();
   }
 
@@ -410,11 +411,15 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                 ),
                               )
                             : const Icon(Icons.download),
-                        label: Text(_isLoading ? 'Yükleniyor...' : 'Playlist Yükle'),
+                        label: Text(
+                          _isLoading ? 'Yükleniyor...' : 'Playlist Yükle',
+                        ),
                       ),
                     ),
                   ],
@@ -454,9 +459,12 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
                           if (_isDownloading)
                             Text(
                               '${(_progress * 100).toStringAsFixed(1)}%',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
                             ),
                         ],
                       ),
@@ -491,10 +499,7 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
                             builder: (context, child) {
                               return Transform.rotate(
                                 angle: _loadingController.value * 2 * pi,
-                                child: const Icon(
-                                  Icons.refresh,
-                                  size: 48,
-                                ),
+                                child: const Icon(Icons.refresh, size: 48),
                               );
                             },
                           ),
@@ -507,125 +512,149 @@ class _PlaylistDownloaderState extends State<PlaylistDownloader>
                       ),
                     )
                   : _videos.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.playlist_play,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Henüz playlist yüklenmedi',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Yukarıdan bir YouTube playlist linki girin',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
-                              ),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.playlist_play,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.outline,
                           ),
-                        )
-                      : Column(
-                          children: [
-                            Expanded(
-                              child: ReorderableListView.builder(
-                                itemCount: _filteredVideos.length,
-                                onReorder: (oldIndex, newIndex) {
-                                  setState(() {
-                                    if (newIndex > oldIndex) newIndex--;
-                                    final item = _videos.removeAt(oldIndex);
-                                    _videos.insert(newIndex, item);
-                                  });
-                                },
-                                itemBuilder: (context, index) {
-                                  final video = _filteredVideos[index];
-                                  final isSelected = _selected.contains(video);
-                                  
-                                  return Card(
-                                    key: ValueKey(video.id.value),
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    child: CheckboxListTile(
-                                      value: isSelected,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          if (val == true) {
-                                            _selected.add(video);
-                                          } else {
-                                            _selected.remove(video);
-                                          }
-                                        });
-                                      },
-                                      secondary: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          video.thumbnails.mediumResUrl,
-                                          width: 60,
-                                          height: 45,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                          const SizedBox(height: 16),
+                          Text(
+                            'Henüz playlist yüklenmedi',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Yukarıdan bir YouTube playlist linki girin',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: ReorderableListView.builder(
+                            itemCount: _filteredVideos.length,
+                            onReorder: (oldIndex, newIndex) {
+                              setState(() {
+                                if (newIndex > oldIndex) newIndex--;
+                                final item = _videos.removeAt(oldIndex);
+                                _videos.insert(newIndex, item);
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              final video = _filteredVideos[index];
+                              final isSelected = _selected.contains(video);
+
+                              return Card(
+                                key: ValueKey(video.id.value),
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: CheckboxListTile(
+                                  value: isSelected,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      if (val == true) {
+                                        _selected.add(video);
+                                      } else {
+                                        _selected.remove(video);
+                                      }
+                                    });
+                                  },
+                                  secondary: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      video.thumbnails.mediumResUrl,
+                                      width: 60,
+                                      height: 45,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
                                             return Container(
                                               width: 60,
                                               height: 45,
-                                              color: Theme.of(context).colorScheme.surfaceVariant,
-                                              child: const Icon(Icons.music_note),
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.surfaceVariant,
+                                              child: const Icon(
+                                                Icons.music_note,
+                                              ),
                                             );
                                           },
-                                        ),
-                                      ),
-                                      title: Text(
-                                        video.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.titleSmall,
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            video.author,
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Theme.of(context).colorScheme.outline,
-                                            ),
-                                          ),
-                                          Text(
-                                            video.duration?.toString() ?? "Bilinmiyor",
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Theme.of(context).colorScheme.primary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      controlAffinity: ListTileControlAffinity.leading,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            if (_selected.isNotEmpty && !_isDownloading)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 16),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton.icon(
-                                    onPressed: _downloadSelected,
-                                    icon: const Icon(Icons.download),
-                                    label: Text('${_selected.length} Şarkıyı İndir'),
-                                    style: FilledButton.styleFrom(
-                                      padding: const EdgeInsets.all(16),
                                     ),
                                   ),
+                                  title: Text(
+                                    video.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        video.author,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.outline,
+                                            ),
+                                      ),
+                                      Text(
+                                        video.duration?.toString() ??
+                                            "Bilinmiyor",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        if (_selected.isNotEmpty && !_isDownloading)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _downloadSelected,
+                                icon: const Icon(Icons.download),
+                                label: Text(
+                                  '${_selected.length} Şarkıyı İndir',
+                                ),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.all(16),
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                          ),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -650,10 +679,9 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
 
   Future<void> _loadFiles() async {
     var dir = await getApplicationDocumentsDirectory();
-    var files = Directory(dir.path)
-        .listSync()
-        .where((f) => f.path.endsWith(".mp3"))
-        .toList();
+    var files = Directory(
+      dir.path,
+    ).listSync().where((f) => f.path.endsWith(".mp3")).toList();
 
     // Sıralama
     files.sort((a, b) {
@@ -675,11 +703,13 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
   List<FileSystemEntity> get _filteredFiles {
     if (_searchQuery.isEmpty) return _files;
     return _files
-        .where((f) => f.path
-            .split('/')
-            .last
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
+        .where(
+          (f) => f.path
+              .split('/')
+              .last
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()),
+        )
         .toList();
   }
 
@@ -694,7 +724,9 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Dosyayı Sil'),
-        content: Text('${file.path.split('/').last} dosyasını silmek istediğinizden emin misiniz?'),
+        content: Text(
+          '${file.path.split('/').last} dosyasını silmek istediğinizden emin misiniz?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -827,9 +859,10 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
                         const SizedBox(height: 16),
                         Text(
                           'Henüz indirilen şarkı yok',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                         ),
                       ],
                     ),
@@ -843,15 +876,19 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
                         var file = _filteredFiles[index];
                         var fileName = file.path.split('/').last;
                         var stat = file.statSync();
-                        
+
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
                               child: Icon(
                                 Icons.music_note,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                               ),
                             ),
                             title: Text(
@@ -865,9 +902,12 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
                                 Text(_formatFileSize(stat.size)),
                                 Text(
                                   '${stat.modified.day}/${stat.modified.month}/${stat.modified.year}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.outline,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outline,
+                                      ),
                                 ),
                               ],
                             ),
@@ -878,16 +918,24 @@ class _DownloadedFilesState extends State<DownloadedFiles> {
                                   icon: const Icon(Icons.play_arrow),
                                   onPressed: () async {
                                     try {
-                                      await widget.audioPlayer.setFilePath(file.path);
+                                      await widget.audioPlayer.setFilePath(
+                                        file.path,
+                                      );
                                       widget.audioPlayer.play();
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
-                                          content: Text('Oynatılıyor: ${fileName.replaceAll('.mp3', '')}'),
+                                          content: Text(
+                                            'Oynatılıyor: ${fileName.replaceAll('.mp3', '')}',
+                                          ),
                                           behavior: SnackBarBehavior.floating,
                                         ),
                                       );
                                     } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text('Oynatma hatası: $e'),
                                           backgroundColor: Colors.red,
@@ -977,204 +1025,287 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
         builder: (context, snapshot) {
           final state = snapshot.data;
           final playing = state?.playing ?? false;
-          final processingState = state?.processingState ?? ProcessingState.idle;
+          final processingState =
+              state?.processingState ?? ProcessingState.idle;
 
-          return Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Albüm kapağı animasyonu
-                AnimatedBuilder(
-                  animation: _rotationController,
-                  builder: (context, child) {
-                    return Transform.rotate(
-                      angle: _rotationController.value * 2 * pi,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.secondary,
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 20,
-                              spreadRadius: 5,
+          return SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Column(
+                      // içerik taşarsa alttan boşluk yerine kaydır
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // ÜST KISIM
+                        Column(
+                          children: [
+                            // Albüm kapağı animasyonu
+                            AnimatedBuilder(
+                              animation: _rotationController,
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle: _rotationController.value * 2 * pi,
+                                  child: Container(
+                                    width: 200,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Theme.of(context).colorScheme.primary,
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                        ],
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.3),
+                                          blurRadius: 20,
+                                          spreadRadius: 5,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.music_note,
+                                      size: 80,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Şarkı bilgisi
+                            StreamBuilder<SequenceState?>(
+                              stream: widget.audioPlayer.sequenceStateStream,
+                              builder: (context, snapshot) {
+                                final currentSource =
+                                    snapshot.data?.currentSource;
+                                final title =
+                                    currentSource?.tag?.title ??
+                                    'Şarkı seçilmedi';
+
+                                return Column(
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Bilinmeyen Sanatçı',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
+                                          ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // İlerleme çubuğu
+                            StreamBuilder<Duration>(
+                              stream: widget.audioPlayer.positionStream,
+                              builder: (context, snapshot) {
+                                final position = snapshot.data ?? Duration.zero;
+                                final duration =
+                                    widget.audioPlayer.duration ??
+                                    Duration.zero;
+
+                                final totalMs = duration.inMilliseconds;
+                                final posMs = position.inMilliseconds.clamp(
+                                  0,
+                                  totalMs,
+                                );
+
+                                return Column(
+                                  children: [
+                                    Slider(
+                                      min: 0,
+                                      max: totalMs > 0 ? totalMs.toDouble() : 1,
+                                      value: totalMs > 0 ? posMs.toDouble() : 0,
+                                      onChanged: totalMs > 0
+                                          ? (value) => widget.audioPlayer.seek(
+                                              Duration(
+                                                milliseconds: value.round(),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            _formatDuration(
+                                              Duration(milliseconds: posMs),
+                                            ),
+                                          ),
+                                          Text(_formatDuration(duration)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),
-                        child: Icon(
-                          Icons.music_note,
-                          size: 80,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 40),
 
-                // Şarkı bilgisi
-                StreamBuilder<SequenceState?>(
-                  stream: widget.audioPlayer.sequenceStateStream,
-                  builder: (context, snapshot) {
-                    final currentSource = snapshot.data?.currentSource;
-                    final title = currentSource?.tag?.title ?? 'Şarkı seçilmedi';
-                    
-                    return Column(
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Bilinmeyen Sanatçı',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 40),
+                        const SizedBox(height: 20),
 
-                // İlerleme çubuğu
-                StreamBuilder<Duration>(
-                  stream: widget.audioPlayer.positionStream,
-                  builder: (context, snapshot) {
-                    final position = snapshot.data ?? Duration.zero;
-                    final duration = widget.audioPlayer.duration ?? Duration.zero;
-                    
-                    return Column(
-                      children: [
-                        Slider(
-                          value: duration.inMilliseconds > 0
-                              ? position.inMilliseconds / duration.inMilliseconds
-                              : 0.0,
-                          onChanged: (value) {
-                            final newPosition = Duration(
-                              milliseconds: (value * duration.inMilliseconds).round(),
-                            );
-                            widget.audioPlayer.seek(newPosition);
-                          },
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_formatDuration(position)),
-                              Text(_formatDuration(duration)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 40),
-
-                // Kontrol butonları
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous),
-                      iconSize: 40,
-                      onPressed: () {
-                        // Önceki şarkı fonksiyonu
-                      },
-                    ),
-                    GestureDetector(
-                      onTapDown: (_) => _scaleController.forward(),
-                      onTapUp: (_) => _scaleController.reverse(),
-                      onTapCancel: () => _scaleController.reverse(),
-                      child: AnimatedBuilder(
-                        animation: _scaleController,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: 1.0 - (_scaleController.value * 0.1),
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Theme.of(context).colorScheme.primary,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  processingState == ProcessingState.loading
-                                      ? Icons.hourglass_empty
-                                      : playing
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                  size: 40,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                        // KONTROLLER (ALT KISIM)
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.skip_previous),
+                                  iconSize: 40,
+                                  onPressed: () {
+                                    // Önceki şarkı
+                                    widget.audioPlayer.seekToPrevious();
+                                  },
                                 ),
-                                onPressed: () {
-                                  if (processingState == ProcessingState.loading) return;
-                                  playing ? widget.audioPlayer.pause() : widget.audioPlayer.play();
-                                },
-                              ),
+                                GestureDetector(
+                                  onTapDown: (_) => _scaleController.forward(),
+                                  onTapUp: (_) => _scaleController.reverse(),
+                                  onTapCancel: () => _scaleController.reverse(),
+                                  child: AnimatedBuilder(
+                                    animation: _scaleController,
+                                    builder: (context, child) {
+                                      return Transform.scale(
+                                        scale:
+                                            1.0 -
+                                            (_scaleController.value * 0.1),
+                                        child: Container(
+                                          width: 80,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.3),
+                                                blurRadius: 15,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: IconButton(
+                                            icon: Icon(
+                                              processingState ==
+                                                      ProcessingState.loading
+                                                  ? Icons.hourglass_empty
+                                                  : playing
+                                                  ? Icons.pause
+                                                  : Icons.play_arrow,
+                                              size: 40,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary,
+                                            ),
+                                            onPressed: () {
+                                              if (processingState ==
+                                                  ProcessingState.loading)
+                                                return;
+                                              playing
+                                                  ? widget.audioPlayer.pause()
+                                                  : widget.audioPlayer.play();
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.skip_next),
+                                  iconSize: 40,
+                                  onPressed: () {
+                                    // Sonraki şarkı
+                                    widget.audioPlayer.seekToNext();
+                                  },
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                      ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.shuffle),
+                                  onPressed: () async {
+                                    final enabled = !(await widget
+                                        .audioPlayer
+                                        .shuffleModeEnabled);
+                                    await widget.audioPlayer
+                                        .setShuffleModeEnabled(enabled);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.repeat),
+                                  onPressed: () async {
+                                    final mode =
+                                        await widget.audioPlayer.loopMode ==
+                                            LoopMode.off
+                                        ? LoopMode.all
+                                        : LoopMode.off;
+                                    await widget.audioPlayer.setLoopMode(mode);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.stop),
+                                  onPressed: () => widget.audioPlayer.stop(),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: MediaQuery.of(context).padding.bottom + 8,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next),
-                      iconSize: 40,
-                      onPressed: () {
-                        // Sonraki şarkı fonksiyonu
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-
-                // Ek kontroller
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.shuffle),
-                      onPressed: () {
-                        // Karıştır fonksiyonu
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.repeat),
-                      onPressed: () {
-                        // Tekrar fonksiyonu
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.stop),
-                      onPressed: () => widget.audioPlayer.stop(),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                );
+              },
             ),
           );
         },
@@ -1268,7 +1399,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 16),
                   ListTile(
                     title: const Text('İndirme Kalitesi'),
-                    subtitle: Text(_downloadQuality == 'high' ? 'Yüksek Kalite' : 'Orta Kalite'),
+                    subtitle: Text(
+                      _downloadQuality == 'high'
+                          ? 'Yüksek Kalite'
+                          : 'Orta Kalite',
+                    ),
                     trailing: DropdownButton<String>(
                       value: _downloadQuality,
                       items: const [
@@ -1301,7 +1436,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 16),
                   SwitchListTile(
                     title: const Text('Otomatik Oynat'),
-                    subtitle: const Text('Şarkı seçildiğinde otomatik olarak oynat'),
+                    subtitle: const Text(
+                      'Şarkı seçildiğinde otomatik olarak oynat',
+                    ),
                     value: _autoPlay,
                     onChanged: (value) {
                       setState(() {
@@ -1334,7 +1471,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const ListTile(
                     leading: Icon(Icons.developer_mode),
                     title: Text('Geliştirici'),
-                    subtitle: Text('Flutter Developer'),
+                    subtitle: Text('Mehmet Çayır'),
                   ),
                   ListTile(
                     leading: const Icon(Icons.star_outline),
@@ -1342,7 +1479,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Değerlendirme özelliği yakında eklenecek!'),
+                          content: Text(
+                            'Değerlendirme özelliği yakında eklenecek!',
+                          ),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
